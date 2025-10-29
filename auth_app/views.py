@@ -8,8 +8,8 @@ from .serializers import UserSerializer
 from .models import User
 import os
 from rest_framework.permissions import AllowAny
-from .utils import compare_face
-import face_recognition
+# from .utils import compare_face
+# import face_recognition
 import uuid
 import os
 from django.conf import settings
@@ -77,14 +77,14 @@ class FaceLoginAPI(APIView):
                     f.write(chunk)
             print(f"[FaceLoginAPI] Image saved temporarily at {tmp_path}")
 
-            uploaded_image = face_recognition.load_image_file(tmp_path)
-            uploaded_encodings = face_recognition.face_encodings(uploaded_image)
+            # uploaded_image = face_recognition.load_image_file(tmp_path)
+            # uploaded_encodings = face_recognition.face_encodings(uploaded_image)
 
-            if not uploaded_encodings:
-                print("[FaceLoginAPI] No face detected in uploaded image")
-                return Response({"error": "No face detected"}, status=400)
+            # if not uploaded_encodings:
+            #     print("[FaceLoginAPI] No face detected in uploaded image")
+            #     return Response({"error": "No face detected"}, status=400)
 
-            uploaded_encoding = uploaded_encodings[0]
+            # uploaded_encoding = uploaded_encodings[0]
             print("[FaceLoginAPI] Face detected in uploaded image")
 
             # Comparer avec toutes les images d'utilisateurs
@@ -97,21 +97,21 @@ class FaceLoginAPI(APIView):
                     print(f"[FaceLoginAPI] Stored image not found for user {user.username}")
                     continue
 
-                stored_image = face_recognition.load_image_file(stored_path)
-                stored_encodings = face_recognition.face_encodings(stored_image)
-                if not stored_encodings:
-                    print(f"[FaceLoginAPI] No face detected in stored image for user {user.username}")
-                    continue
+                # stored_image = face_recognition.load_image_file(stored_path)
+                # stored_encodings = face_recognition.face_encodings(stored_image)
+                # if not stored_encodings:
+                #     print(f"[FaceLoginAPI] No face detected in stored image for user {user.username}")
+                #     continue
 
-                if compare_face(stored_encodings[0].tolist(), tmp_path):
-                    refresh = RefreshToken.for_user(user)
-                    print(f"[FaceLoginAPI] Face match found: {user.username}")
-                    return Response({
-                        "success": True,
-                        "user": UserSerializer(user).data,
-                        "refresh": str(refresh),
-                        "access": str(refresh.access_token)
-                    })
+                # if compare_face(stored_encodings[0].tolist(), tmp_path):
+                #     refresh = RefreshToken.for_user(user)
+                #     print(f"[FaceLoginAPI] Face match found: {user.username}")
+                #     return Response({
+                #         "success": True,
+                #         "user": UserSerializer(user).data,
+                #         "refresh": str(refresh),
+                #         "access": str(refresh.access_token)
+                #     })
 
             print("[FaceLoginAPI] No matching face found")
             return Response({"success": False, "message": "No matching face found"}, status=401)

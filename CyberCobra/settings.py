@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'auth_app',
+    'report'
 ]
 
 AUTH_USER_MODEL = 'auth_app.User'
@@ -58,11 +59,12 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cybercobra',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': '',  # no password
         'HOST': 'localhost',
         'PORT': '3306',
     }
 }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
