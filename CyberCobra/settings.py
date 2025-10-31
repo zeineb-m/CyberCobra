@@ -20,7 +20,7 @@ if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
     ALLOWED_HOSTS = [
         "localhost",
         "127.0.0.1",
-        "cybercobra-4.onrender.com",  # backend Render
+        "cybercobra-4.onrender.com",  # back Render
     ]
 
 # -----------------------------
@@ -84,21 +84,28 @@ ROOT_URLCONF = 'CyberCobra.urls'
 WSGI_APPLICATION = 'CyberCobra.wsgi.application'
 
 # -----------------------------
-# Database (FreeSQLDatabase)
+# Database
 # -----------------------------
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "sql7805541",
-        "USER": "sql7805541",
-        "PASSWORD": "3uFlGmh3xY",
-        "HOST": "sql7.freesqldatabase.com",
-        "PORT": "3306",
-        "OPTIONS": {
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"
-        },
+if os.environ.get("RENDER"):
+    # Déploiement Render : SQLite simple pour build
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    # Local : MySQL
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": "ton_nom_db",
+            "USER": "ton_user",
+            "PASSWORD": "ton_mot_de_passe",
+            "HOST": "localhost",
+            "PORT": "3306",
+        }
+    }
 
 # -----------------------------
 # Password validation
@@ -131,11 +138,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 # -----------------------------
 # CORS
 # -----------------------------
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = False  # mieux pour la prod
 CORS_ALLOWED_ORIGINS = [
-    "https://cybercobra-2.onrender.com",             # Frontend Render
-    "http://localhost:3000",                         # Front local
-    "https://v0-cyber-cobramain-three.vercel.app",   # Front Vercel
+    "https://cybercobra-2.onrender.com",  # front Render
+    "http://localhost:3000",  
+      "https://v0-cyber-cobramain-three.vercel.app",
 ]
 
 # -----------------------------
@@ -150,6 +157,9 @@ REST_FRAMEWORK = {
 # -----------------------------
 # Optional: disable heavy libs on Render
 # -----------------------------
+# Pour Render, tu peux commenter les imports ou fonctions qui utilisent:
+# face_recognition, google.generativeai, etc.
+# Exemple:
 # try:
 #     import face_recognition
 # except ImportError:
