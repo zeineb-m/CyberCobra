@@ -8,8 +8,8 @@ from .serializers import UserSerializer
 from .models import User
 import os
 from rest_framework.permissions import AllowAny
-from .utils import compare_face
-import face_recognition
+# from .utils import compare_face
+# import face_recognition
 import uuid
 import os
 from django.conf import settings
@@ -57,69 +57,69 @@ class LoginAPI(APIView):
             "message": "Nom d'utilisateur ou mot de passe invalide."
         }, status=status.HTTP_401_UNAUTHORIZED)
 
-class FaceLoginAPI(APIView):
-    permission_classes = [AllowAny]
+# class FaceLoginAPI(APIView):
+#     permission_classes = [AllowAny]
 
-    def post(self, request):
-        image_file = request.FILES.get("image")
-        if not image_file:
-            print("[FaceLoginAPI] No image received")
-            return Response({"error": "Image required"}, status=400)
+#     def post(self, request):
+#         image_file = request.FILES.get("image")
+#         if not image_file:
+#             print("[FaceLoginAPI] No image received")
+#             return Response({"error": "Image required"}, status=400)
 
-        tmp_filename = f"{uuid.uuid4()}.jpg"
-        tmp_path = os.path.join(settings.MEDIA_ROOT, "tmp", tmp_filename)
-        os.makedirs(os.path.dirname(tmp_path), exist_ok=True)
+#         tmp_filename = f"{uuid.uuid4()}.jpg"
+#         tmp_path = os.path.join(settings.MEDIA_ROOT, "tmp", tmp_filename)
+#         os.makedirs(os.path.dirname(tmp_path), exist_ok=True)
 
-        # Sauvegarder temporairement
-        try:
-            with open(tmp_path, "wb") as f:
-                for chunk in image_file.chunks():
-                    f.write(chunk)
-            print(f"[FaceLoginAPI] Image saved temporarily at {tmp_path}")
+#         # Sauvegarder temporairement
+#         try:
+#             with open(tmp_path, "wb") as f:
+#                 for chunk in image_file.chunks():
+#                     f.write(chunk)
+#             print(f"[FaceLoginAPI] Image saved temporarily at {tmp_path}")
 
-            uploaded_image = face_recognition.load_image_file(tmp_path)
-            uploaded_encodings = face_recognition.face_encodings(uploaded_image)
+#             uploaded_image = face_recognition.load_image_file(tmp_path)
+#             uploaded_encodings = face_recognition.face_encodings(uploaded_image)
 
-            if not uploaded_encodings:
-                print("[FaceLoginAPI] No face detected in uploaded image")
-                return Response({"error": "No face detected"}, status=400)
+#             if not uploaded_encodings:
+#                 print("[FaceLoginAPI] No face detected in uploaded image")
+#                 return Response({"error": "No face detected"}, status=400)
 
-            uploaded_encoding = uploaded_encodings[0]
-            print("[FaceLoginAPI] Face detected in uploaded image")
+#             uploaded_encoding = uploaded_encodings[0]
+#             print("[FaceLoginAPI] Face detected in uploaded image")
 
-            # Comparer avec toutes les images d'utilisateurs
-            users = User.objects.exclude(image__isnull=True)
-            print(f"[FaceLoginAPI] Checking {users.count()} users in database")
+#             # Comparer avec toutes les images d'utilisateurs
+#             users = User.objects.exclude(image__isnull=True)
+#             print(f"[FaceLoginAPI] Checking {users.count()} users in database")
 
-            for user in users:
-                stored_path = os.path.join(settings.MEDIA_ROOT, user.image.name)
-                if not os.path.exists(stored_path):
-                    print(f"[FaceLoginAPI] Stored image not found for user {user.username}")
-                    continue
+#             for user in users:
+#                 stored_path = os.path.join(settings.MEDIA_ROOT, user.image.name)
+#                 if not os.path.exists(stored_path):
+#                     print(f"[FaceLoginAPI] Stored image not found for user {user.username}")
+#                     continue
 
-                stored_image = face_recognition.load_image_file(stored_path)
-                stored_encodings = face_recognition.face_encodings(stored_image)
-                if not stored_encodings:
-                    print(f"[FaceLoginAPI] No face detected in stored image for user {user.username}")
-                    continue
+#                 stored_image = face_recognition.load_image_file(stored_path)
+#                 stored_encodings = face_recognition.face_encodings(stored_image)
+#                 if not stored_encodings:
+#                     print(f"[FaceLoginAPI] No face detected in stored image for user {user.username}")
+#                     continue
 
-                if compare_face(stored_encodings[0].tolist(), tmp_path):
-                    refresh = RefreshToken.for_user(user)
-                    print(f"[FaceLoginAPI] Face match found: {user.username}")
-                    return Response({
-                        "success": True,
-                        "user": UserSerializer(user).data,
-                        "refresh": str(refresh),
-                        "access": str(refresh.access_token)
-                    })
+#                 if compare_face(stored_encodings[0].tolist(), tmp_path):
+#                     refresh = RefreshToken.for_user(user)
+#                     print(f"[FaceLoginAPI] Face match found: {user.username}")
+#                     return Response({
+#                         "success": True,
+#                         "user": UserSerializer(user).data,
+#                         "refresh": str(refresh),
+#                         "access": str(refresh.access_token)
+#                     })
 
-            print("[FaceLoginAPI] No matching face found")
-            return Response({"success": False, "message": "No matching face found"}, status=401)
+#             print("[FaceLoginAPI] No matching face found")
+#             return Response({"success": False, "message": "No matching face found"}, status=401)
 
-        finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-                print(f"[FaceLoginAPI] Temporary file {tmp_path} removed")
+#         finally:
+#             if os.path.exists(tmp_path):
+#                 os.remove(tmp_path)
+#                 print(f"[FaceLoginAPI] Temporary file {tmp_path} removed")
 
 class LogoutAPI(APIView):
 
