@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'auth_app',
     'gestion_dequipement',
+    'gestion_camera',
 ]
 
 AUTH_USER_MODEL = 'auth_app.User'
