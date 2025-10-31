@@ -103,6 +103,19 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+# -----------------------------
+# Allowed hosts
+# -----------------------------
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+
+# Si la variable d'environnement n'est pas définie, utiliser des valeurs par défaut
+if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
+    ALLOWED_HOSTS = [
+        "localhost",              # local
+        "127.0.0.1",              # local
+        "cybercobra-4.onrender.com"  # domaine Render
+    ]
+
 
 # -----------------------------
 # Internationalization
