@@ -7,6 +7,8 @@ SECRET_KEY = 'django-insecure-lxtu1qs!=n4y68ro%ljwkqijy=e&r^-_b*l%+qd)g9ah^#@a)!
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+GEMINI_API_KEY = 'AIzaSyCLSb6C9qx62C-K32X22Q1EWFqFBoHPCDM'
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -19,9 +21,11 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'auth_app',
-    'report'
+    'report',
     'gestion_dequipement',
     'gestion_camera',
+     'zones_app'
+
 ]
 
 AUTH_USER_MODEL = 'auth_app.User'
