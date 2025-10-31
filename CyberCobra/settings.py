@@ -11,7 +11,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # -----------------------------
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key")
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost").split(",")
+
+# -----------------------------
+# Allowed hosts
+# -----------------------------
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
+    ALLOWED_HOSTS = [
+        "localhost",
+        "127.0.0.1",
+        "cybercobra-4.onrender.com",  # back Render
+    ]
 
 # -----------------------------
 # Installed apps
@@ -31,8 +41,7 @@ INSTALLED_APPS = [
     'report',
     'gestion_dequipement',
     'gestion_camera',
-     'zones_app'
-
+    'zones_app',
 ]
 
 # -----------------------------
@@ -40,7 +49,7 @@ INSTALLED_APPS = [
 # -----------------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # CORS
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -48,10 +57,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# -----------------------------
+# Templates
+# -----------------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],  
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -74,7 +87,7 @@ WSGI_APPLICATION = 'CyberCobra.wsgi.application'
 # Database
 # -----------------------------
 if os.environ.get("RENDER"):
-    # Sur Render: SQLite pour build simple
+    # Déploiement Render : SQLite simple pour build
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -82,7 +95,7 @@ if os.environ.get("RENDER"):
         }
     }
 else:
-    # Localement: MySQL
+    # Local : MySQL
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
@@ -103,19 +116,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
-# -----------------------------
-# Allowed hosts
-# -----------------------------
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
-
-# Si la variable d'environnement n'est pas définie, utiliser des valeurs par défaut
-if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
-    ALLOWED_HOSTS = [
-        "localhost",              # local
-        "127.0.0.1",              # local
-        "cybercobra-4.onrender.com"  # domaine Render
-    ]
-
 
 # -----------------------------
 # Internationalization
@@ -138,7 +138,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 # -----------------------------
 # CORS
 # -----------------------------
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False  # mieux pour la prod
+CORS_ALLOWED_ORIGINS = [
+    "https://cybercobra-2.onrender.com",  # front Render
+    "http://localhost:3000",              # front local
+]
 
 # -----------------------------
 # REST framework (JWT)
