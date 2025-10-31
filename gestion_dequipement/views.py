@@ -1,9 +1,9 @@
-from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
+from django.shortcuts import get_object_or_404
 from PIL import Image, ImageFilter
 import io
 import os
@@ -13,12 +13,9 @@ from .models import Equipement
 from .serializers import EquipementSerializer
 
 
-class EquipementViewSet(viewsets.ModelViewSet):
-    queryset = Equipement.objects.all()
-    serializer_class = EquipementSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [JSONParser, MultiPartParser, FormParser]
-
+class ImageHashMixin:
+    """Mixin containing all image processing and hashing logic"""
+    
     # --- Helpers for perceptual hashing ---
     def _average_hash(self, img: Image.Image, hash_size: int = 8) -> str:
         """Return 64-bit average hash as 16-hex string."""
@@ -202,9 +199,8 @@ class EquipementViewSet(viewsets.ModelViewSet):
         except Exception:
             return 0.0
 
-    def perform_create(self, serializer):
-        instance = serializer.save()
-        # Compute hash if image provided
+    def _compute_and_save_hashes(self, instance):
+        """Helper to compute and save image hashes for an equipment instance"""
         try:
             if instance.image and hasattr(instance.image, 'path') and os.path.exists(instance.image.path):
                 instance.image_hash = self._path_average_hash(instance.image.path)
@@ -214,20 +210,90 @@ class EquipementViewSet(viewsets.ModelViewSet):
         except Exception:
             pass
 
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        # If new image uploaded, recompute hash
+
+class EquipementListCreateAPIView(ImageHashMixin, APIView):
+    """
+    GET: List all equipements
+    POST: Create a new equipement
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+    def get(self, request):
+        equipements = Equipement.objects.all()
+        serializer = EquipementSerializer(equipements, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = EquipementSerializer(data=request.data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            # Compute hash if image provided
+            self._compute_and_save_hashes(instance)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EquipementDetailAPIView(ImageHashMixin, APIView):
+    """
+    GET: Retrieve a single equipement
+    PUT: Update an equipement (full update)
+    PATCH: Partial update an equipement
+    DELETE: Delete an equipement
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+    def get_object(self, pk):
+        return get_object_or_404(Equipement, pk=pk)
+
+    def get(self, request, pk):
+        equipement = self.get_object(pk)
+        serializer = EquipementSerializer(equipement)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        equipement = self.get_object(pk)
+        serializer = EquipementSerializer(equipement, data=request.data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            # If new image uploaded, recompute hash
+            if 'image' in request.FILES:
+                self._compute_and_save_hashes(instance)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, pk):
+        equipement = self.get_object(pk)
+        serializer = EquipementSerializer(equipement, data=request.data, partial=True)
+        if serializer.is_valid():
+            instance = serializer.save()
+            # If new image uploaded, recompute hash
+            if 'image' in request.FILES:
+                self._compute_and_save_hashes(instance)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        equipement = self.get_object(pk)
+        # Optional: remove image file from disk
         try:
-            if 'image' in self.request.FILES and instance.image and hasattr(instance.image, 'path') and os.path.exists(instance.image.path):
-                instance.image_hash = self._path_average_hash(instance.image.path)
-                with Image.open(instance.image.path) as im:
-                    instance.phash = self._phash(im)
-                instance.save(update_fields=['image_hash', 'phash'])
+            if equipement.image and hasattr(equipement.image, 'path') and os.path.exists(equipement.image.path):
+                os.remove(equipement.image.path)
         except Exception:
             pass
+        equipement.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=["post"], url_path="recognize", permission_classes=[permissions.IsAuthenticated])
-    def recognize(self, request):
+
+class EquipementRecognizeAPIView(ImageHashMixin, APIView):
+    """
+    POST: Recognize equipment from uploaded image
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
         """
         Recognition v2: Try perceptual hash match against stored equipment images.
         If a close match is found, return that equipment's saved statut.
