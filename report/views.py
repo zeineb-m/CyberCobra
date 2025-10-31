@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Report
@@ -5,6 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .serializer import ReportSerializer
+import google.generativeai as genai
 
 
 # Create your views here.
@@ -46,3 +48,37 @@ def specific_report(request, pk):
     if request.method == "DELETE":
         report.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+from rest_framework import status
+
+@api_view(["POST"])
+def summarize_report(request):      
+    # With DRF, use request.data (already parsed JSON)
+    subject = request.data.get('subject', '')
+    body = request.data.get('body', '')
+    model_name = "gemini-2.5-flash"
+    context = f"""
+           Summarize this report: subject: "{subject}. Body: {body}"
+        """
+    try:
+        # New way:
+        genai.configure(api_key="AIzaSyBuzdqLkRf0ZRjJWE5G9590eDzrSttM5co")
+        model = genai.GenerativeModel(model_name)
+        # Step 1: Generate SPARQL query from AI
+        response = model.generate_content(context)
+
+        response_text = response.text if hasattr(response, "text") else str(response)
+
+              # Fix: Use correct Response parameters (data and status)
+        return Response(
+            data={"message": response_text},
+            status=status.HTTP_200_OK
+        )   
+    
+    except Exception as e:
+        # Fix: Use correct Response parameters
+        return Response(
+            data={"error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
