@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -13,14 +13,27 @@ def validate_phone(value):
 class User(AbstractUser):
     CIN = models.CharField(max_length=8, unique=True, validators=[validate_cin])
     phone = models.CharField(max_length=8, unique=True, validators=[validate_phone])
-    # image = models.ImageField(upload_to='users/')
-    image = models.ImageField(upload_to='users/', blank=True, null=True)  # Make optional
+    image = models.ImageField(upload_to='users/', blank=True, null=True)
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
 
+    groups = models.ManyToManyField(
+        Group,
+        related_name="auth_app_users",  # éviter le clash
+        blank=True,
+        help_text='The groups this user belongs to.',
+        verbose_name='groups'
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name="auth_app_user_permissions",  # éviter le clash
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions'
+    )
+
     USERNAME_FIELD = "username"
-    # REQUIRED_FIELDS = ["email", "CIN", "first_name", "last_name", "phone", "image"]
     REQUIRED_FIELDS = ["email", "CIN", "first_name", "last_name", "phone"]
 
     def __str__(self):
