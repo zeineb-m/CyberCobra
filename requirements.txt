@@ -4,4 +4,3 @@ djangorestframework-simplejwt
 mysqlclient
 django-cors-headers
 Pillow
-face_recognition
