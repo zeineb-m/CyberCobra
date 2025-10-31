@@ -142,6 +142,7 @@ CORS_ALLOW_ALL_ORIGINS = False  # mieux pour la prod
 CORS_ALLOWED_ORIGINS = [
     "https://cybercobra-2.onrender.com",  # front Render
     "http://localhost:3000",              # front local
+     "https://v0-cyber-cobramain-three.vercel.app",
 ]
 
 # -----------------------------
