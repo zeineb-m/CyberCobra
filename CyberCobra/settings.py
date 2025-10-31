@@ -20,6 +20,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'auth_app',
     'report'
+    'gestion_dequipement',
+    'gestion_camera',
 ]
 
 AUTH_USER_MODEL = 'auth_app.User'
@@ -107,6 +109,9 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # ou ton port React
+    "http://localhost:5173",   # Vite dev
+    "http://127.0.0.1:5173",  # Vite dev (IP)
+    "http://localhost:3000",  # Next.js dev
+    "http://127.0.0.1:3000",  # Next.js dev (IP)
 ]
 CORS_ALLOW_CREDENTIALS = True
